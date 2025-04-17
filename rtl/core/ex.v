@@ -22,7 +22,7 @@ module ex (
 
         output wire [`RegBus]       jump_addr    ,
         output wire [`RegBus]       result       ,
-        output wire                 jump
+        output wire                 JC
     );
 
     // jump_addr
@@ -33,13 +33,16 @@ module ex (
     // ALU
     wire mem    = rmem | wmem;
 
+    // wire [`RegBus] op1 = lui ?`ZeroWord :
+    //      (jmp|auipc) ? inst_addr : rs1_data;
+
+    // {32{lui}} | ({32{jmp|auipc}} & inst_addr)
+
     wire [`RegBus] op1 = lui ?`ZeroWord :
          (jmp|auipc) ? inst_addr : rs1_data;
 
     wire [`RegBus] op2 = jmp ? 32'd4 :
          (inst_R|jcc) ? rs2_data : imm;
-
-    wire JC;
 
     ALU ALU_inst(
             .op1      (op1      ),
@@ -51,6 +54,6 @@ module ex (
             .JC       (JC       )
         );
 
-    assign jump = jmp | (jcc & JC);
+    // assign jump = jmp | (jcc & JC);
 
 endmodule

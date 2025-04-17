@@ -10,7 +10,6 @@ module pc (
         output wire [`RegBus]   pc
     );
 
-    // reg [`RegBus] npc;
     reg [`RegBus] pc_reg;
     reg [`RegBus] pc_buff;
 
@@ -28,21 +27,6 @@ module pc (
         endcase
     end
 
-
-    // always @(*)
-    // begin
-    //     case ({rstn,jump,hold_flag})
-    //         3'b101 :npc = pc_reg;          // hold
-    //         3'b110 :npc = jump_addr;       // 跳转
-    //         3'b100 :npc = pc_reg + 32'd4;  // 自增
-    //         default:npc = `pc_rstn;
-    //     endcase
-    // end
-
-
-    // assign pc = hold_flag ? pc_reg - 32'd4 : pc_reg;
-    // assign pc = hold_flag ? pc_buff : pc_reg;
-
     always @(posedge clk or negedge rstn)
     begin
         if (!rstn)
@@ -52,7 +36,6 @@ module pc (
         else
             pc_buff <= pc_buff;
     end
-    // {pc_reg} <= {npc};
 
     assign pc = hold_flag ? pc_buff : pc_reg;
 

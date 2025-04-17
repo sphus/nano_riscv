@@ -1,4 +1,22 @@
 
+`define COMBINATION_ROM
+`define PYTHON
+`define SIM_TIME 20000
+// `define ONE_INST_TEST
+
+
+`define TEST_FILE "./generated/rv32ui-p-addi.txt"
+
+
+`define Statenum      3
+`define StateBus      (`Statenum - 1):0
+`define IF_STATE  3'b001
+`define EX_STATE  3'b010
+`define WB_STATE  3'b100
+`define IF  0
+`define EX  1
+`define WB  2
+
 `define pc_rstn     32'h0
 `define ZeroReg     5'h0
 
@@ -28,8 +46,6 @@
 // `define Hold_pc     2'b01
 // `define Hold_ls     2'b10
 
-
-
 // flush
 `define Flush_num   2
 `define Flush_Bus   (`Flush_num-1):0
@@ -52,11 +68,11 @@
 `define sw_imm_num  3
 `define sw_imm_bus  (`sw_imm_num-1):0
 `define sw_immI     3'b000
-`define sw_immIu    3'b001
+// `define sw_immIu    3'b001
 `define sw_immU     3'b010
 `define sw_immS     3'b011
 `define sw_immB     3'b100
-`define sw_immBu    3'b101
+// `define sw_immBu    3'b101
 `define sw_immJ     3'b110
 
 
@@ -81,17 +97,17 @@
 
 // L type inst
 `define INST_TYPE_L 7'b0000011
-`define INST_LB     3'b000
-`define INST_LH     3'b001
-`define INST_LW     3'b010
-`define INST_LBU    3'b100
-`define INST_LHU    3'b101
+// `define INST_LB     3'b000
+// `define INST_LH     3'b001
+// `define INST_LW     3'b010
+// `define INST_LBU    3'b100
+// `define INST_LHU    3'b101
 
 // S type inst
 `define INST_TYPE_S 7'b0100011
-`define INST_SB     3'b000
-`define INST_SH     3'b001
-`define INST_SW     3'b010
+// `define INST_SB     3'b000
+// `define INST_SH     3'b001
+// `define INST_SW     3'b010
 
 // R and M type inst
 `define INST_TYPE_R_M 7'b0110011

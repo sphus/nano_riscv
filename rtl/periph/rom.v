@@ -1,8 +1,6 @@
 
 `include "../defines.v"
 
-`define COMBINATION
-
 module rom #(
         parameter DW = 32,
         parameter AW = 32,
@@ -21,7 +19,7 @@ module rom #(
 
     reg[DW-1:0] memory[0:MEM_NUM-1];
 
-`ifdef COMBINATION
+`ifdef COMBINATION_ROM
     always @(*)
             r_data = memory[r_addr >> 2];
 `else

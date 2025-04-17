@@ -37,32 +37,29 @@ module riscv(
     wire [`RegBus       ]   rs2_data     ;
 
     // control
-    wire                    wen          ;    // register write enable
-    wire                    jmp          ;    // Jump
-    wire                    jcc          ;    // Jump on Condition
-    wire [`ALU_ctrl_bus ]   alu_ctrl     ;    // ALU Control
-    wire                    jal          ;    // JAL  Instruction
-    wire                    jalr         ;    // JALR Instruction
-    wire                    lui          ;    // LUI Instruction
-    wire                    auipc        ;    // AUIPC Instruction
-    wire                    inst_R       ;   // INST TYPE R
-    wire                    sign         ;    // ALU SIGN
-    wire                    sub          ;    // ALU SUB
-    wire [`RegBus       ]   imm          ;    // immediate
+    wire                    wen          ;  // register write enable
+    wire                    jmp          ;  // Jump
+    wire                    jcc          ;  // Jump on Condition
+    wire [`ALU_ctrl_bus ]   alu_ctrl     ;  // ALU Control
+    wire                    jal          ;  // JAL  Instruction
+    wire                    jalr         ;  // JALR Instruction
+    wire                    lui          ;  // LUI Instruction
+    wire                    auipc        ;  // AUIPC Instruction
+    wire                    inst_R       ;  // INST TYPE R
+    wire                    sign         ;  // ALU SIGN
+    wire                    sub          ;  // ALU SUB
+    wire [`RegBus       ]   imm          ;  // immediate
+    wire [`StateBus     ]   state       ;  // immediate
+    wire                    JC          ;  // ALU SUB
     // -------------------------- ID -------------------------- //
 
     // -------------------------- EX -------------------------- //
     // data
     wire [`RegBus       ]   result       ;
     wire [`RegBus       ]   jump_addr    ;
+    wire [`RegBus]          rd_data      ;
     // -------------------------- EX -------------------------- //
 
-    // -------------------------- MEM-------------------------- //
-    // -------------------------- MEM ------------------------- //
-
-    // -------------------------- WB -------------------------- //
-    wire [`RegBus]          rd_data      ;
-    // -------------------------- WB -------------------------- //
 
     wire [`Hold_Bus] halt_req = {`Hold_num{halt_req_i}};
     wire reset_req = reset_req_i;
@@ -76,7 +73,6 @@ module riscv(
            .pc          (inst_addr_rom  )
        );
 
-`define COMBINATION_ROM
 
 `ifdef COMBINATION_ROM
        assign inst_addr = inst_addr_rom;
@@ -96,28 +92,46 @@ module riscv(
 `endif
 
 
+    // 分线
+    // assign  rs1_addr  = inst[19:15];
+    // assign  rs2_addr  = inst[24:20];
+    // assign  rd_addr   = inst[11: 7];
 
-    id_unit id_unit_inst(
-                .inst       (inst    ),
-                .rs1_addr_o (rs1_addr),
-                .rs2_addr_o (rs2_addr),
-                .rmem       (rmem    ),
-                .wmem       (wmem    ),
-                .wen        (wen     ),
-                .jmp        (jmp     ),
-                .jcc        (jcc     ),
-                .alu_ctrl   (alu_ctrl),
-                .jal        (jal     ),
-                .jalr       (jalr    ),
-                .lui        (lui     ),
-                .auipc      (auipc   ),
-                .inst_R     (inst_R  ),
-                .mem_type   (mem_type),
-                .mem_sign   (mem_sign),
-                .sign       (sign    ),
-                .sub        (sub     ),
-                .imm        (imm     ),
-                .rd_addr_o  (rd_addr )
+    wire  [`sw_imm_bus]   imm_ctrl    ;   // Immediate Control
+
+    control control_inst(
+                .clk        (clk        ),
+                .rstn       (rstn       ),
+                .hold       (hold       ),
+                .inst       (inst       ),
+                .JC         (JC         ),
+                .imm_ctrl   (imm_ctrl   ),
+                .rs1_addr   (rs1_addr   ),
+                .rs2_addr   (rs2_addr   ),
+                .rd_addr    (rd_addr    ),
+                .rmem       (rmem       ),
+                .wmem       (wmem       ),
+                .wen        (wen        ),
+                .jmp        (jmp        ),
+                .jcc        (jcc        ),
+                .alu_ctrl   (alu_ctrl   ),
+                .jal        (jal        ),
+                .jalr       (jalr       ),
+                .lui        (lui        ),
+                .auipc      (auipc      ),
+                .inst_R     (inst_R     ),
+                .mem_type   (mem_type   ),
+                .mem_sign   (mem_sign   ),
+                .sign       (sign       ),
+                .sub        (sub        ),
+                .state      (state      ),
+                .jump       (jump       )
+            );
+
+    imm_gen imm_gen_inst(
+                .inst     (inst     ),
+                .imm_ctrl (imm_ctrl ),
+                .imm      (imm      )
             );
 
     register register_inst(
@@ -133,30 +147,30 @@ module riscv(
              );
 
     ex ex_inst(
-           .inst_addr (inst_addr ),
-           .rs1_data  (rs1_data  ),
-           .rs2_data  (rs2_data  ),
-           .rmem      (rmem      ),
-           .wmem      (wmem      ),
-           .jmp       (jmp       ),
-           .jcc       (jcc       ),
-           .alu_ctrl  (alu_ctrl  ),
-           .jal       (jal       ),
-           .jalr      (jalr      ),
-           .lui       (lui       ),
-           .auipc     (auipc     ),
-           .inst_R    (inst_R    ),
-           .sign      (sign      ),
-           .sub       (sub       ),
-           .imm       (imm       ),
-           .jump_addr (jump_addr ),
-           .result    (result    ),
-           .jump      (jump      )
+           .inst_addr (inst_addr),
+           .rs1_data  (rs1_data ),
+           .rs2_data  (rs2_data ),
+           .rmem      (rmem     ),
+           .wmem      (wmem     ),
+           .jmp       (jmp      ),
+           .jcc       (jcc      ),
+           .alu_ctrl  (alu_ctrl ),
+           .jal       (jal      ),
+           .jalr      (jalr     ),
+           .lui       (lui      ),
+           .auipc     (auipc    ),
+           .inst_R    (inst_R   ),
+           .sign      (sign     ),
+           .sub       (sub      ),
+           .imm       (imm      ),
+           .jump_addr (jump_addr),
+           .result    (result   ),
+           .JC        (JC       )
        );
 
     // MEM_inst
-    assign mem_addr   = result;
-    assign mem_wdata   = rs2_data;
+    assign mem_addr     = result;
+    assign mem_wdata    = rs2_data;
 
     wb wb_inst(
            .mem_rdata (mem_rdata ),
@@ -166,16 +180,16 @@ module riscv(
        );
 
     hazard_detection hazard_detection_inst(
-                         .clk     (clk           ),
-                         .rstn    (rstn          ),
-                         .jump    (jump          ),
-                         .ID_rs1  (rs1_addr   ),
-                         .ID_rs2  (rs2_addr   ),
-                         .EX_rd   (rd_addr    ),
-                         .EX_rmem (rmem       ),
-                         .busy    (busy          ),
-                         .hold    (hold          ),
-                         .flush   (flush         )
+                         .clk     (clk      ),
+                         .rstn    (rstn     ),
+                         .jump    (jump     ),
+                         .ID_rs1  (rs1_addr ),
+                         .ID_rs2  (rs2_addr ),
+                         .EX_rd   (rd_addr  ),
+                         .EX_rmem (rmem     ),
+                         .busy    (busy     ),
+                         .hold    (hold     ),
+                         .flush   (flush    )
                      );
 
 endmodule

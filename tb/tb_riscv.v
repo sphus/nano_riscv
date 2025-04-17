@@ -1,14 +1,10 @@
 
+`include "../rtl/defines.v"
 `timescale 1ns/1ns
 module tb_riscv();
 
 
-    // `define PYTHON
-    // `define ONE_INST_TEST
-
-`define SIM_TIME 10000
 `define CLK_PERIOD 20
-`define TEST_FILE "./generated/rv32ui-p-lb.txt"
 
 `define PYTHON_FILE "../generated/inst_data.txt"
 
