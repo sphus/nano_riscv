@@ -1,12 +1,11 @@
 
-// `define COMBINATION_ROM
 `define PYTHON
 // `define SIM_TIME 500
 `define SIM_TIME 60000
 // `define ONE_INST_TEST
 
 
-`define TEST_FILE "./generated/rv32ui-p-bge.txt"
+`define TEST_FILE "./generated/rv32ui-p-addi.txt"
 
 
 `define Statenum      3
@@ -68,13 +67,13 @@
 `define INST_AND        3'b111
 
 // Immdiate Switch
-`define sw_imm_num  3
+`define sw_imm_num  5
 `define sw_imm_bus  (`sw_imm_num-1):0
-`define sw_immI     3'b000
-`define sw_immU     3'b010
-`define sw_immS     3'b011
-`define sw_immB     3'b100
-`define sw_immJ     3'b110
+`define IMMJ     4
+`define IMMB     3
+`define IMMU     2
+`define IMMS     1
+`define IMMI     0
 
 
 `define mem_type_num 2

@@ -20,7 +20,7 @@ module control (
         output wire                 mem_sign    ,   // Load/Store Data Sign
         output wire                 sign        ,   // ALU SIGN
         output wire                 sub         ,   // ALU SUB
-        output reg  [`StateBus]     state       
+        output reg  [`StateBus]     state
     );
 
     always @(posedge clk or negedge rstn)
@@ -49,12 +49,12 @@ module control (
     wire    jcc     = (opcode == `INST_TYPE_B   );
 
     // Jump signal
-    assign imm_ctrl =
-           ({`sw_imm_num{inst_I |inst_L|jalr}}) & `sw_immI |
-           ({`sw_imm_num{inst_S             }}) & `sw_immS |
-           ({`sw_imm_num{lui    |auipc      }}) & `sw_immU |
-           ({`sw_imm_num{jcc                }}) & `sw_immB |
-           ({`sw_imm_num{jal                }}) & `sw_immJ ;
+    assign imm_ctrl ={
+               (jal                ),   //  J
+               (jcc                ),   //  B
+               (lui    |auipc      ),   //  U
+               (inst_S             ),   //  S
+               (inst_I |inst_L|jalr)};  //  I
 
 
 
@@ -69,7 +69,7 @@ module control (
     DFF #(1)JAL_DFF     (clk,rstn,`Enable,`Disable,jal  ,jal_reg    );
     DFF #(1)JALR_DFF    (clk,rstn,`Enable,`Disable,jalr ,jalr_reg   );
 
-    
+
 
     // ALU signal
     assign alu_ctrl = func3 & {`ALU_ctrl_num{(inst_I | inst_R | jcc) & (state[`EX]|state[`WB])}};
@@ -81,7 +81,7 @@ module control (
     // memory Sign/Zero Extension
     // memory Byte/Half/Word type
     assign {mem_sign,mem_type} = (func3 & {3{state[`EX] | state[`WB]}}) |
-                                ({`LS_unsigned,`LS_W} & {3{state[`IF]}}) ;
+           ({`LS_unsigned,`LS_W} & {3{state[`IF]}}) ;
 
     // register write enable
     assign wen  = (inst_I|
@@ -93,7 +93,8 @@ module control (
                    auipc) & state[`WB];
 
     assign wmem = inst_S & state[`WB];
-    assign rmem = state[`IF] | (inst_L & state[`WB]);
+    // assign rmem = state[`IF] | (inst_L & (state[`EX] | state[`WB]));
+    assign rmem = state[`IF] | (inst_L & (state[`EX] | state[`WB]));
 
     // EX_WB阶段计算result
     wire [`ALU_sel_bus]  alu_sel_MEM_WB =
@@ -103,8 +104,8 @@ module control (
           inst_I|inst_L|inst_S,
           inst_R|jcc    }
          & {`ALU_sel_num{state[`EX]|state[`WB]}};
-         
-         // 在IF阶段计算inst_addr
+
+    // 在IF阶段计算inst_addr
     wire [`ALU_sel_bus]  alu_sel_IF =
          {~{cjump_reg|jal_reg|jalr_reg},
           cjump_reg|jal_reg,

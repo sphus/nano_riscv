@@ -62,23 +62,6 @@ module riscv_soc (
 			  .reset_req_i	(jtag_reset_req	)
           );
 
-
-    // rom #(
-    //         .DW      	(DW    ),
-    //         .AW      	(AW    ),
-    //         .MEM_NUM 	(2**12  ))
-    //     rom_inst(
-    //         .clk    	(clk            ),
-    //         .rstn   	(rstn           ),
-    //         .wen    	(jtag_wen		),
-    //         .w_addr 	(jtag_waddr		),
-    //         .w_data 	(jtag_wdata		),
-    //         .ren    	(1'b1           ),
-    //         .r_addr 	(inst_addr_rom  ),
-    //         .r_data 	(inst_rom       )
-    //     );
-
-
     ram_interface ram_interface_inst(
                       .clk      (clk        ),
                       .rstn     (rstn       ),

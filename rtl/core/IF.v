@@ -15,7 +15,7 @@ module IF (
     assign inst = ({32{state[`EX]}} & mem_rdata)|
         ({32{state[`IF] | state[`WB]}} & inst_dff);
 
-    DFFD #(`Regnum) INST_DFF(
+    DFF #(`Regnum) INST_DFF(
         .clk      (clk          ),
         .rstn     (rstn         ),
         .CE       (state[`EX]   ),

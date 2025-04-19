@@ -18,11 +18,11 @@ module riscv(
         input  wire					reset_req_i
     );
 
-    // ------------------- HAZARD DETECTION ------------------- //
+    // test signal
     wire [`Hold_Bus     ]   hold = `Disable;
-    // ------------------- HAZARD DETECTION ------------------- //
+    wire [`Hold_Bus] halt_req = {`Hold_num{halt_req_i}};
+    wire reset_req = reset_req_i;
 
-    // -------------------------- ID -------------------------- //
     // data
     wire [`RegBus       ]   inst        ;
     wire [`RegBus       ]   inst_addr   ;
@@ -31,6 +31,8 @@ module riscv(
     wire [`RegAddrBus   ]   rd_addr     ;
     wire [`RegBus       ]   rs1_data    ;
     wire [`RegBus       ]   rs2_data    ;
+    wire [`RegBus       ]   result      ;
+    wire [`RegBus]          rd_data     ;
 
     // control
     wire                    wen         ;   // register write enable
@@ -43,30 +45,14 @@ module riscv(
     wire                    JC          ;   // JC signal
     wire [`sw_imm_bus]      imm_ctrl    ;   // Immediate Control
 
-    // -------------------------- ID -------------------------- //
-
-    // -------------------------- EX -------------------------- //
-    // data
-    wire [`RegBus       ]   result       ;
-    wire [`RegBus]          rd_data      ;
-    // -------------------------- EX -------------------------- //
 
 
-    wire [`Hold_Bus] halt_req = {`Hold_num{halt_req_i}};
-    wire reset_req = reset_req_i;
+    // 分线
+    assign  rs1_addr  = inst[19:15];
+    assign  rs2_addr  = inst[24:20];
+    assign  rd_addr   = inst[11: 7];
 
-    // pc pc_inst(
-    //        .clk         (clk            ),
-    //        .rstn        (rstn|reset_req ),
-    //        .hold        (hold|halt_req  ),
-    //        .jump        (jump           ),
-    //        .jump_addr   (jump_addr      ),
-    //        .pc          (inst_addr_rom  )
-    //    );
-
-
-
-    DFFD #(`Regnum) pc_inst(
+    DFF #(`Regnum) pc_inst(
              .clk      (clk       ),
              .rstn     (rstn      ),
              .CE       (state[`IF]),
@@ -83,32 +69,6 @@ module riscv(
            .inst       (inst       )
        );
 
-    // 分线
-    assign  rs1_addr  = inst[19:15];
-    assign  rs2_addr  = inst[24:20];
-    assign  rd_addr   = inst[11: 7];
-
-
-    // control control_inst(
-    //             .clk        (clk        ),
-    //             .rstn       (rstn       ),
-    //             .hold       (`Disable   ),
-    //             .inst       (inst       ),
-    //             .JC         (JC         ),
-    //             .imm_ctrl   (imm_ctrl   ),
-    //             // .rs1_addr   (rs1_addr   ),
-    //             // .rs2_addr   (rs2_addr   ),
-    //             // .rd_addr    (rd_addr    ),
-    //             .rmem       (rmem       ),
-    //             .wmem       (wmem       ),
-    //             .wen        (wen        ),
-    //             .alu_ctrl   (alu_ctrl   ),
-    //             .mem_sign   (mem_sign   ),
-    //             .sign       (sign       ),
-    //             .sub        (sub        ),
-    //             .state      (state      ),
-    //             .jump       (jump       )
-    //         );
 
     control control_inst(
                 .clk      (clk      ),
@@ -128,7 +88,6 @@ module riscv(
                 .sub      (sub      ),
                 .state    (state    )
             );
-
 
     imm_gen imm_gen_inst(
                 .inst     (inst     ),
@@ -171,19 +130,6 @@ module riscv(
            .rmem      (rmem      ),
            .rd_data   (rd_data   )
        );
-
-    // hazard_detection hazard_detection_inst(
-    //                      .clk     (clk      ),
-    //                      .rstn    (rstn     ),
-    //                      .jump    (jump     ),
-    //                      .ID_rs1  (rs1_addr ),
-    //                      .ID_rs2  (rs2_addr ),
-    //                      .EX_rd   (rd_addr  ),
-    //                      .EX_rmem (rmem     ),
-    //                      .busy    (busy     ),
-    //                      .hold    (hold     ),
-    //                      .flush   (flush    )
-    //                  );
 
 endmodule
 
