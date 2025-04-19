@@ -2,47 +2,39 @@
 `include "../defines.v"
 module ex (
         // data
-        input  wire [`RegBus]       inst_addr    ,
-        input  wire [`RegBus]       rs1_data     ,
-        input  wire [`RegBus]       rs2_data     ,
+        input  wire [`RegBus]       inst_addr   ,
+        input  wire [`RegBus]       rs1_data    ,
+        input  wire [`RegBus]       rs2_data    ,
+        input  wire [`RegBus]       imm         ,   // immediate
         // control
-        input  wire                 rmem         ,    // memory   read  enable
-        input  wire                 wmem         ,    // memory   write enable
-        input  wire                 jmp          ,    // Jump
-        input  wire                 jcc          ,    // Jump on Condition
-        input  wire [`ALU_ctrl_bus] alu_ctrl     ,    // ALU Control
-        input  wire                 jal          ,    // JAL  Instruction
-        input  wire                 jalr         ,    // JALR Instruction
-        input  wire                 lui          ,    // LUI Instruction
-        input  wire                 auipc        ,    // AUIPC Instruction
-        input  wire                 inst_R       ,    // INST TYPE R
-        input  wire                 sign         ,    // ALU SIGN
-        input  wire                 sub          ,    // ALU SUB
-        input  wire [`RegBus]       imm          ,    // immediate
+        input  wire [`ALU_sel_bus]  alu_sel     ,   // ALU Select
+        input  wire [`ALU_ctrl_bus] alu_ctrl    ,   // ALU Control
+        input  wire                 sign        ,   // ALU SIGN
+        input  wire                 sub         ,   // ALU SUB
 
-        output wire [`RegBus]       jump_addr    ,
-        output wire [`RegBus]       result       ,
+        output wire [`RegBus]       result      ,
         output wire                 JC
     );
 
     // jump_addr
-    wire [`RegBus]  basic_addr   = (jal | jcc) ? inst_addr : rs1_data;
-    wire [`RegBus]  offset_addr  = imm ;
-    assign jump_addr = basic_addr + offset_addr;
+    // wire [`RegBus]  basic_addr   = (jal | jcc) ? inst_addr : rs1_data;
+    // wire [`RegBus]  offset_addr  = imm ;
+    // assign jump_addr = basic_addr + offset_addr;
 
-    // ALU
-    wire mem    = rmem | wmem;
+    wire [`RegBus] op1 = {`Regnum{alu_sel[0]|alu_sel[1]}}           & rs1_data  |
+                        {`Regnum{alu_sel}}                          & `ZeroWord |
+                        {`Regnum{alu_sel[3]|alu_sel[4]}}            & inst_addr;
+
+    wire [`RegBus] op2 = {`Regnum{alu_sel[0]}}                      & rs2_data  |
+                        {`Regnum{alu_sel[1]|alu_sel[2]|alu_sel[3]}} & imm       |
+                        {`Regnum{alu_sel[4]}}                       & 32'd4;
+
 
     // wire [`RegBus] op1 = lui ?`ZeroWord :
     //      (jmp|auipc) ? inst_addr : rs1_data;
 
-    // {32{lui}} | ({32{jmp|auipc}} & inst_addr)
-
-    wire [`RegBus] op1 = lui ?`ZeroWord :
-         (jmp|auipc) ? inst_addr : rs1_data;
-
-    wire [`RegBus] op2 = jmp ? 32'd4 :
-         (inst_R|jcc) ? rs2_data : imm;
+    // wire [`RegBus] op2 = jmp ? 32'd4 :
+    //      (inst_R|jcc) ? rs2_data : imm;
 
     ALU ALU_inst(
             .op1      (op1      ),
@@ -53,7 +45,5 @@ module ex (
             .result   (result   ),
             .JC       (JC       )
         );
-
-    // assign jump = jmp | (jcc & JC);
 
 endmodule

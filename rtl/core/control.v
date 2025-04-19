@@ -10,40 +10,18 @@ module control (
         input  wire [`RegBus]       inst        ,
         input  wire                 JC          ,
         // to imm_gen
-        output wire [`sw_imm_bus]   imm_ctrl    ,   // ALU Control
-        output wire [`RegAddrBus]   rs1_addr    ,   // Register 1 Address
-        output wire [`RegAddrBus]   rs2_addr    ,   // Register 2 Address
-        output wire [`RegAddrBus]   rd_addr     ,   // Register Destination Address
+        output wire [`sw_imm_bus]   imm_ctrl    ,   // IMM Control
+        output wire [`ALU_sel_bus]  alu_sel     ,   // ALU Select
+        output wire [`ALU_ctrl_bus] alu_ctrl    ,   // ALU Control
         output wire                 rmem        ,   // Memory   Read  Enable
         output wire                 wmem        ,   // Memory   Write Enable
         output wire                 wen         ,   // Register Write Enable
-        output wire                 jmp         ,   // Jump
-        output wire                 jcc         ,   // Jump on Condition
-        output wire [`ALU_ctrl_bus] alu_ctrl    ,   // ALU Control
-        output wire                 jal         ,   // JAL  Instruction
-        output wire                 jalr        ,   // JALR Instruction
-        output wire                 lui         ,   // LUI Instruction
-        output wire                 auipc       ,   // AUIPC Instruction
-        output wire                 inst_R      ,   // INST TYPE R
         output wire [`mem_type_bus] mem_type    ,   // Load/Store Data Type
         output wire                 mem_sign    ,   // Load/Store Data Sign
         output wire                 sign        ,   // ALU SIGN
         output wire                 sub         ,   // ALU SUB
-        output reg  [`StateBus]     state       ,
-        output wire                 jump
-
+        output reg  [`StateBus]     state       
     );
-
-    // 分线
-    assign  rs1_addr  = inst[19:15];
-    assign  rs2_addr  = inst[24:20];
-    assign  rd_addr   = inst[11: 7];
-
-
-    wire [6:0] func7   = inst[31:25];
-    wire [2:0] func3   = inst[14:12];
-    wire [6:0] opcode  = inst[ 6: 0];
-
 
     always @(posedge clk or negedge rstn)
     begin
@@ -55,53 +33,87 @@ module control (
             state <= {state[`Statenum-2:0],state[`Statenum-1]};
     end
 
-    assign imm_ctrl =   ({`sw_imm_num{opcode == `INST_TYPE_I}} |
-                         {`sw_imm_num{opcode == `INST_TYPE_L}} |
-                         {`sw_imm_num{opcode == `INST_JALR  }}) & `sw_immI |
-                        ({`sw_imm_num{opcode == `INST_TYPE_S}}) & `sw_immS |
-                        ({`sw_imm_num{opcode == `INST_LUI   }} |
-                         {`sw_imm_num{opcode == `INST_AUIPC }}) & `sw_immU |
-                        ({`sw_imm_num{opcode == `INST_TYPE_B}}) & `sw_immB |
-                        ({`sw_imm_num{opcode == `INST_JAL   }}) & `sw_immJ ;
+    wire [6:0] func7   = inst[31:25];
+    wire [2:0] func3   = inst[14:12];
+    wire [6:0] opcode  = inst[ 6: 0];
 
     // INST signal
-    assign jalr = (opcode == `INST_JALR);
-    assign jal  = (opcode == `INST_JAL);
-    assign lui  = (opcode == `INST_LUI);
-    assign inst_R  = (opcode == `INST_TYPE_R_M);
-    assign auipc = (opcode == `INST_AUIPC);
-
+    wire    jalr    = (opcode == `INST_JALR     );
+    wire    jal     = (opcode == `INST_JAL      );
+    wire    lui     = (opcode == `INST_LUI      );
+    wire    auipc   = (opcode == `INST_AUIPC    );
+    wire    inst_R  = (opcode == `INST_TYPE_R_M );
+    wire    inst_I  = (opcode == `INST_TYPE_I   );
+    wire    inst_L  = (opcode == `INST_TYPE_L   );
+    wire    inst_S  = (opcode == `INST_TYPE_S   );
+    wire    jcc     = (opcode == `INST_TYPE_B   );
 
     // Jump signal
-    assign jcc  = (opcode == `INST_TYPE_B);
+    assign imm_ctrl =
+           ({`sw_imm_num{inst_I |inst_L|jalr}}) & `sw_immI |
+           ({`sw_imm_num{inst_S             }}) & `sw_immS |
+           ({`sw_imm_num{lui    |auipc      }}) & `sw_immU |
+           ({`sw_imm_num{jcc                }}) & `sw_immB |
+           ({`sw_imm_num{jal                }}) & `sw_immJ ;
 
-    assign jmp  = (opcode == `INST_JAL ||
-                   opcode == `INST_JALR);
+
+
+    wire    cjump_reg;
+    wire    jal_reg  ;
+    wire    jalr_reg ;
+    wire    cjump   = jcc & JC;
+    wire    jump_reg    = (cjump_reg|jal_reg|jalr_reg) & state[`IF];
+
+    // DFF #(1)DFF_inst (clk,rstn,CE     ,set_data,d    ,q          );
+    DFF #(1)CJUMP_DFF   (clk,rstn,`Enable,`Disable,cjump,cjump_reg  );
+    DFF #(1)JAL_DFF     (clk,rstn,`Enable,`Disable,jal  ,jal_reg    );
+    DFF #(1)JALR_DFF    (clk,rstn,`Enable,`Disable,jalr ,jalr_reg   );
+
+    
 
     // ALU signal
-    assign alu_ctrl = func3 & {3{~auipc & ~lui & ~jmp & ~rmem & ~wmem}};
-    assign sub  = (opcode == `INST_TYPE_R_M) ? func7[5] : `Disable;
+    assign alu_ctrl = func3 & {`ALU_ctrl_num{(inst_I | inst_R | jcc) & (state[`EX]|state[`WB])}};
+    assign sub      = inst_R& func7[5] & (state[`EX]|state[`WB]);
 
     // Shift Left Sign/Zero Extension
     assign sign = func7[5];
 
-    // memory signal
-    assign rmem = (opcode == `INST_TYPE_L);
-    assign wmem = (opcode == `INST_TYPE_S);
     // memory Sign/Zero Extension
     // memory Byte/Half/Word type
-    assign {mem_sign,mem_type} = func3;
+    assign {mem_sign,mem_type} = (func3 & {3{state[`EX] | state[`WB]}}) |
+                                ({`LS_unsigned,`LS_W} & {3{state[`IF]}}) ;
 
     // register write enable
-    assign wen  = (opcode == `INST_TYPE_I   ||
-                   opcode == `INST_TYPE_R_M ||
-                   opcode == `INST_TYPE_L   ||
-                   opcode == `INST_JAL      ||
-                   opcode == `INST_JALR     ||
-                   opcode == `INST_LUI      ||
-                   opcode == `INST_AUIPC);
+    assign wen  = (inst_I|
+                   inst_R|
+                   inst_L|
+                   jal  |
+                   jalr |
+                   lui  |
+                   auipc) & state[`WB];
 
-    assign jump = jmp | (jcc & JC);
+    assign wmem = inst_S & state[`WB];
+    assign rmem = state[`IF] | (inst_L & state[`WB]);
 
+    // EX_WB阶段计算result
+    wire [`ALU_sel_bus]  alu_sel_MEM_WB =
+         {jal   |jalr       ,
+          auipc             ,
+          lui               ,
+          inst_I|inst_L|inst_S,
+          inst_R|jcc    }
+         & {`ALU_sel_num{state[`EX]|state[`WB]}};
+         
+         // 在IF阶段计算inst_addr
+    wire [`ALU_sel_bus]  alu_sel_IF =
+         {~{cjump_reg|jal_reg|jalr_reg},
+          cjump_reg|jal_reg,
+          `Disable    ,
+          jalr_reg  ,
+          `Disable}
+         & {`ALU_sel_num{state[`IF]}};
+
+    // sel信号合并
+    assign alu_sel = alu_sel_MEM_WB | alu_sel_IF;
 
 endmodule //control

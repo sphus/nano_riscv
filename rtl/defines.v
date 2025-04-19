@@ -1,11 +1,12 @@
 
-`define COMBINATION_ROM
+// `define COMBINATION_ROM
 `define PYTHON
-`define SIM_TIME 20000
+// `define SIM_TIME 500
+`define SIM_TIME 60000
 // `define ONE_INST_TEST
 
 
-`define TEST_FILE "./generated/rv32ui-p-addi.txt"
+`define TEST_FILE "./generated/rv32ui-p-bge.txt"
 
 
 `define Statenum      3
@@ -53,26 +54,26 @@
 `define Flush_jump  2'b10
 
 // ALU Switch
-`define ALU_ctrl_num  3
-`define ALU_ctrl_bus  (`ALU_ctrl_num - 1):0
-`define INST_ADD    3'b000
-`define INST_SLL    3'b001
-`define INST_SLT    3'b010
-`define INST_SLTU   3'b011
-`define INST_XOR    3'b100
-`define INST_SR     3'b101
-`define INST_OR     3'b110
-`define INST_AND    3'b111
+`define ALU_ctrl_num    3
+`define ALU_ctrl_bus    (`ALU_ctrl_num - 1):0
+`define ALU_sel_num     5
+`define ALU_sel_bus     (`ALU_sel_num - 1):0
+`define INST_ADD        3'b000
+`define INST_SLL        3'b001
+`define INST_SLT        3'b010
+`define INST_SLTU       3'b011
+`define INST_XOR        3'b100
+`define INST_SR         3'b101
+`define INST_OR         3'b110
+`define INST_AND        3'b111
 
 // Immdiate Switch
 `define sw_imm_num  3
 `define sw_imm_bus  (`sw_imm_num-1):0
 `define sw_immI     3'b000
-// `define sw_immIu    3'b001
 `define sw_immU     3'b010
 `define sw_immS     3'b011
 `define sw_immB     3'b100
-// `define sw_immBu    3'b101
 `define sw_immJ     3'b110
 
 

@@ -12,7 +12,7 @@ module tb_riscv();
 `ifdef PYTHON
     `define READ_FILE `PYTHON_FILE
 `else
-    `define READ_FILE `TEST_FILE
+`define READ_FILE `TEST_FILE
 `endif
 
 
@@ -55,15 +55,15 @@ module tb_riscv();
         end
     end
 
-    // initial rom
-    initial
-    begin
-        $readmemh(`READ_FILE,tb_riscv.riscv_soc_inst.rom_inst.memory);
-    end
+    // // initial rom
+    // initial
+    // begin
+    //     $readmemh(`READ_FILE,tb_riscv.riscv_soc_inst.rom_inst.memory);
+    // end
 
     wire [31:0] inst_addr = tb_riscv.riscv_soc_inst.riscv_inst.inst_addr;
-    wire        jump_flag = tb_riscv.riscv_soc_inst.riscv_inst.jump;
-    wire [31:0] jump_addr = tb_riscv.riscv_soc_inst.riscv_inst.jump_addr;
+    wire        jump_flag = tb_riscv.riscv_soc_inst.riscv_inst.control_inst.jump_reg;
+    wire [31:0] jump_addr = tb_riscv.riscv_soc_inst.riscv_inst.result;
 
     wire [31:0] x [31:0];
 
@@ -82,7 +82,7 @@ module tb_riscv();
     initial
     begin
         wait(x[26] == 32'b1);
-        #(`CLK_PERIOD*5);
+        #(`CLK_PERIOD*20);
         if(x[27] == 32'b1)
         begin
             $display("############################");

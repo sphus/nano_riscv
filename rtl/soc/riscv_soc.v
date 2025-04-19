@@ -49,8 +49,6 @@ module riscv_soc (
               .clk           (clk           ),
               .rstn          (rstn          ),
               .busy          (busy          ),
-              .inst_rom      (inst_rom      ),
-              .inst_addr_rom (inst_addr_rom ),
               .mem_rdata     (mem_rdata     ),
               .mem_wdata     (mem_wdata     ),
               .mem_addr      (mem_addr      ),
@@ -65,20 +63,20 @@ module riscv_soc (
           );
 
 
-    rom #(
-            .DW      	(DW    ),
-            .AW      	(AW    ),
-            .MEM_NUM 	(2**12  ))
-        rom_inst(
-            .clk    	(clk            ),
-            .rstn   	(rstn           ),
-            .wen    	(jtag_wen		),
-            .w_addr 	(jtag_waddr		),
-            .w_data 	(jtag_wdata		),
-            .ren    	(1'b1           ),
-            .r_addr 	(inst_addr_rom  ),
-            .r_data 	(inst_rom       )
-        );
+    // rom #(
+    //         .DW      	(DW    ),
+    //         .AW      	(AW    ),
+    //         .MEM_NUM 	(2**12  ))
+    //     rom_inst(
+    //         .clk    	(clk            ),
+    //         .rstn   	(rstn           ),
+    //         .wen    	(jtag_wen		),
+    //         .w_addr 	(jtag_waddr		),
+    //         .w_data 	(jtag_wdata		),
+    //         .ren    	(1'b1           ),
+    //         .r_addr 	(inst_addr_rom  ),
+    //         .r_data 	(inst_rom       )
+    //     );
 
 
     ram_interface ram_interface_inst(

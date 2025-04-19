@@ -1,5 +1,6 @@
 
 `include "../defines.v"
+
 module imm_gen (
         input  wire [`RegBus]       inst    ,
         input  wire [`sw_imm_bus]   imm_ctrl,
