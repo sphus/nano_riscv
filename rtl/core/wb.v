@@ -2,16 +2,18 @@
 `include "../defines.v"
 module wb (
         // data
-        input  wire [`RegBus]          mem_rdata,
-        input  wire [`RegBus]          result   ,
+        input  wire [`InstBus]  mem_rdata   ,
+        input  wire [`InstBus]  result      ,
         // control
-        input  wire                    rmem     ,
+        input  wire             wb_mem      ,
 
         // data
-        output wire [`RegBus]          rd_data   
+        output wire [`InstBus]  rd_data   
 
     );
 
-    assign rd_data = rmem ? mem_rdata : result;
-
+    assign rd_data = 
+    {`Wordnum{ wb_mem}} & mem_rdata |
+    {`Wordnum{~wb_mem}} & result    ;
+     
 endmodule

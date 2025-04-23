@@ -17,14 +17,14 @@ module riscv_soc (
     wire [31:0] inst_addr_rom   ;
     wire [31:0] inst_rom        ;
 
-    wire [`RegBus]          mem_rdata       ;
-    wire [`RegBus]          mem_wdata       ;
-    wire [`RegBus]          mem_addr        ;
+    wire [`InstBus]          mem_rdata       ;
+    wire [`InstBus]          mem_wdata       ;
+    wire [`InstBus]          mem_addr        ;
     wire [`mem_type_bus]    mem_type        ;
     wire                    mem_sign        ;
     wire                    rmem            ;
     wire                    wmem            ;
-    wire [`RegBus]          addr            ;
+    wire [`InstBus]          addr            ;
 
     wire [3:0]		        wen             ;
     wire [AW-1:0]	        w_addr          ;
@@ -48,7 +48,7 @@ module riscv_soc (
     riscv riscv_inst(
               .clk           (clk           ),
               .rstn          (rstn          ),
-              .busy          (busy          ),
+            //   .busy          (busy          ),
               .mem_rdata     (mem_rdata     ),
               .mem_wdata     (mem_wdata     ),
               .mem_addr      (mem_addr      ),

@@ -5,17 +5,17 @@ module ram_interface (
         input  wire                 rstn        ,
 
 
-        output reg  [`RegBus]       mem_rdata   ,
-        input  wire [`RegBus]       mem_wdata   ,
-        input  wire [`RegBus]       mem_addr    ,
+        output reg  [`InstBus]       mem_rdata   ,
+        input  wire [`InstBus]       mem_wdata   ,
+        input  wire [`InstBus]       mem_addr    ,
         input  wire [`mem_type_bus] mem_type    ,
         input  wire                 mem_sign    ,
         input  wire                 rmem        ,
         input  wire                 wmem        ,
 
-        input  wire [`RegBus]       r_data      ,
-        output reg  [`RegBus]       w_data      ,
-        output wire [`RegBus]       addr        ,
+        input  wire [`InstBus]       r_data      ,
+        output reg  [`InstBus]       w_data      ,
+        output wire [`InstBus]       addr        ,
         output reg  [3:0]           wen         ,
         output wire                 busy        ,
         output wire                 ren
@@ -46,19 +46,38 @@ module ram_interface (
     //     busy <= rstn ? rmem : `Disable;
     // end
 
+    // always @(posedge clk)
+    // begin
+    //     type_reg <= rstn ? mem_type : `LS_B;
+    // end
+
+    // always @(posedge clk)
+    // begin
+    //     addr_reg <= rstn ? mem_addr[1:0] : `ZeroWord;
+    // end
+
     always @(posedge clk)
     begin
-        type_reg <= rstn ? mem_type : `LS_B;
+        if (!rstn)
+            type_reg <= `LS_B;
+        else if (rmem | wmem)
+            type_reg <= mem_type;
     end
 
     always @(posedge clk)
     begin
-        addr_reg <= rstn ? mem_addr[1:0] : `ZeroWord;
+        if (!rstn)
+            addr_reg <= `ZeroWord;
+        else if (rmem | wmem)
+            addr_reg <= mem_addr[1:0];
     end
 
     always @(posedge clk)
     begin
-        sign_reg <= rstn ? mem_sign : `Disable;
+        if (!rstn)
+            sign_reg <= `Disable;
+        else if (rmem | wmem)
+            sign_reg <= mem_sign;
     end
 
     always @(*)

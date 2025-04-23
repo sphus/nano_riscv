@@ -5,25 +5,29 @@ transcript
 work/
 wlft*
 
-# # python测试中间文件
-# sim/pytest/__pycache__
-# sim/pytest/out.vvp
-# sim/generated/inst_data.txt
+# python测试中间文件
+sim/pytest/__pycache__
+sim/pytest/out.vvp
+sim/generated/inst_data.txt
 
-# # python测试结果
-# sim/output/fail.txt
-# sim/output/pass.txt
+# python测试结果
+sim/output/fail.txt
+sim/output/pass.txt
 
 # 测试文件
 tools/
-sim
+
 # 测试工具链
 tests/
 
 # vivado工程
 prj
 
+# 约束文件
+constr
+
 # visio暂存文件
-~$$pipe_5.~vsdx
-# 未完成框图
-doc/one_pipe.png
+~$$nano_riscv.~vsdx
+
+# 指令文档
+doc/img/instruction.jpg

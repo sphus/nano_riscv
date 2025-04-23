@@ -1,59 +1,51 @@
 `include "../defines.v"
 module ALU (
-        input  wire [`RegBus]       op1         ,   // operands 1
-        input  wire [`RegBus]       op2         ,   // operands 2
+        input  wire [`InstBus]      op1         ,   // operands 1
+        input  wire [`InstBus]      op2         ,   // operands 2
         input  wire [`ALU_ctrl_bus] alu_ctrl    ,   // ALU control
         input  wire                 sub         ,   // sub
         input  wire                 sign        ,   // sign
-        output reg  [`RegBus]       result      ,   // result
-        output reg                  JC              // Jump Condition
+        output wire [`InstBus]      result      ,   // result
+        output wire                 JC              // Jump Condition
     );
 
     // signed operand
-    wire signed [`RegBus]       op1_s = op1;
-    wire signed [`RegBus]       op2_s = op2;
+    wire signed [`InstBus]       op1_s = op1;
+    wire signed [`InstBus]       op2_s = op2;
 
     // ALU result
-    wire        [`RegBus]       add_sub_val = op1 + (sub ? ~op2 + sub : op2);
-    wire        [`RegBus]       xor_val     = op1 ^ op2;
-    wire        [`RegBus]       or_val      = op1 | op2;
-    wire        [`RegBus]       and_val     = op1 & op2;
-    wire        [`RegAddrBus]   shamt       = op2[4:0];
-    wire        [`RegBus]       sll_val     = op1 << shamt;
-    wire        [`RegBus]       sr_val      = sign ? (op1_s >>> shamt) : (op1_s >> shamt);
+    wire        [`InstBus]       add_sub_val = op1 + (sub ? ~op2 + sub : op2);
+    wire        [`InstBus]       xor_val     = op1 ^ op2;
+    wire        [`InstBus]       or_val      = op1 | op2;
+    wire        [`InstBus]       and_val     = op1 & op2;
+    wire        [`RegAddrBus]    shamt       = op2[4:0];
+    wire        [`InstBus]       sll_val     = op1 << shamt;
+    wire        [`InstBus]       sr_val      = sign ? (op1_s >>> shamt) : (op1_s >> shamt);
 
     // JC signal
-    wire eq             = (op1 == op2)      ? `Enable : `Disable;
-    wire less_signed    = (op1_s < op2_s)   ? `Enable : `Disable;
-    wire less_unsigned  = (op1 < op2)       ? `Enable : `Disable;
+    wire eq             = (op1 == op2)      ;
+    wire less_signed    = (op1_s < op2_s)   ;
+    wire less_unsigned  = (op1 < op2)       ;
 
-    always @( *)
-    begin
-        case (alu_ctrl)
-            `INST_ADD : result = add_sub_val;
-            `INST_SLL : result = sll_val;
-            `INST_SLT : result = less_signed;
-            `INST_SLTU: result = less_unsigned;
-            `INST_XOR : result = xor_val;
-            `INST_SR  : result = sr_val;
-            `INST_OR  : result = or_val;
-            `INST_AND : result = and_val;
-            default:    result = `ZeroWord;
-        endcase
-    end
+    // 控制信号:二进制码转独热码
+    wire [7:0] ctrl = 8'h01 << alu_ctrl;
 
+    assign result =
+           add_sub_val   & {`Wordnum{ctrl[0]}} |
+           sll_val       & {`Wordnum{ctrl[1]}} |
+           less_signed   & {`Wordnum{ctrl[2]}} |
+           less_unsigned & {`Wordnum{ctrl[3]}} |
+           xor_val       & {`Wordnum{ctrl[4]}} |
+           sr_val        & {`Wordnum{ctrl[5]}} |
+           or_val        & {`Wordnum{ctrl[6]}} |
+           and_val       & {`Wordnum{ctrl[7]}} ;
 
-    always @( *)
-    begin
-        case (alu_ctrl)
-            `INST_BEQ : JC = eq;
-            `INST_BNE : JC = ~eq;
-            `INST_BLT : JC = less_signed;
-            `INST_BGE : JC = ~less_signed;
-            `INST_BLTU: JC = less_unsigned;
-            `INST_BGEU: JC = ~less_unsigned;
-            default:    JC = `Disable;
-        endcase
-    end
+    assign JC =
+           eq             & ctrl[0] |
+           ~eq            & ctrl[1] |
+           less_signed    & ctrl[4] |
+           ~less_signed   & ctrl[5] |
+           less_unsigned  & ctrl[6] |
+           ~less_unsigned & ctrl[7] ;
 
 endmodule //ALU

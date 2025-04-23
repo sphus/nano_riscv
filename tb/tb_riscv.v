@@ -35,8 +35,8 @@ module tb_riscv();
         rstn = 1'b1;
     end
 
-    parameter DEPTH = 2**13;  // 总地址 1M
-    parameter RAM_DEPTH = DEPTH / 4;  // 每块 RAM 的大小 2^18
+    parameter DEPTH = 2**13;  // 总地址 0x2000
+    parameter RAM_DEPTH = DEPTH / 4;  // 每块 RAM 的大小为原来的1/4
 
     reg [31:0] temp_mem [0:RAM_DEPTH-1]; // 读取 32-bit 数据
 
@@ -57,7 +57,8 @@ module tb_riscv();
 
     wire [31:0] inst_addr = tb_riscv.riscv_soc_inst.riscv_inst.inst_addr;
     wire        jump_flag = tb_riscv.riscv_soc_inst.riscv_inst.control_inst.jump_reg;
-    wire [31:0] jump_addr = tb_riscv.riscv_soc_inst.riscv_inst.result;
+    wire [31:0] alu_result = tb_riscv.riscv_soc_inst.riscv_inst.result;
+    wire [31:0] jump_addr = alu_result;
 
     wire [31:0] x [31:0];
 
@@ -109,18 +110,19 @@ module tb_riscv();
 `endif
 
     begin
+`ifdef PRINT_REGISTER
         $display("inst_addr is %x at %d",inst_addr,$time);
         for(r = 0;r < 31; r = r + 4)
             $display("x%2d to x%2d:%x %x %x %x",r,r+3,x[r],x[r+1],x[r+2],x[r+3]);
         $display("\n");
+`endif
+
     end
 
     always @(posedge clk)
     begin
         if(jump_flag)
-        begin
             $display("%x jump to %x at %d", inst_addr,jump_addr,$time);
-        end
 
         if ($time >= `SIM_TIME)
         begin
@@ -139,6 +141,26 @@ module tb_riscv();
         end
     end
 
+    always @(negedge clk)
+    begin
+        if ((alu_result ^ alu_result) !== 32'b0)
+        begin
+            $display("fail testnum = %2d", x[3]);
+            $display("############################");
+            $display("########  fail  !!!#########");
+            $display("############################");
+            $display("############################");
+            $display("###### Unknown result #####");
+            $display("############################");
+`ifdef PYTHON
+
+            $finish;
+`else
+            $stop;
+`endif
+
+        end
+    end
 
 
     riscv_soc riscv_soc_inst(
