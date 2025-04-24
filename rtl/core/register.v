@@ -1,55 +1,47 @@
-
 `include "../defines.v"
 module register (
-        input  wire clk ,
-        input  wire rstn,
-        // from id
-        input  wire [`RegAddrBus]   rs1_raddr ,
-        input  wire [`RegAddrBus]   rs2_raddr ,
-        // from ex
-        input  wire [`RegAddrBus]   rd_waddr  ,
-        input  wire [`InstBus]      rd_wdata  ,
-        input  wire                 wen       ,
-        // to id
-        output reg  [`InstBus]      rs1_data ,
-        output reg  [`InstBus]      rs2_data
+        input  wire                 clk         ,
+        input  wire                 rstn        ,
+        input  wire [`RegAddrBus]   rs1_raddr   ,
+        input  wire [`RegAddrBus]   rs2_raddr   ,
+        input  wire [`RegAddrBus]   rd_waddr    ,
+        input  wire [`InstBus   ]   rd_wdata    ,
+        input  wire                 wen         ,
+        output wire [`InstBus   ]   rs1_data    ,
+        output wire [`InstBus   ]   rs2_data
     );
 
-    reg [`InstBus] reg_mem [0:`Regnum - 1];
+    wire [`InstBus] reg_mem [`Regnum-1:0];
+    wire [`Regnum-1:0] rf_wen;
 
-    // read register 1
-    always @(*)
-    begin
-        if (!rstn)
-            rs1_data = `ZeroWord;
-        else if (rs1_raddr == `ZeroReg)
-            rs1_data = `ZeroWord;
-        else
-            rs1_data = reg_mem[rs1_raddr];
-    end
+    // register file address index
+    genvar rf;
+    generate
+        for (rf=0; rf < `Regnum; rf=rf+1)
+        begin:regfile//{
+            if(rf==0)
+            begin: rf0
+                // x0 cannot be wrote since it is constant-zeros
+                assign rf_wen[rf] = `Disable;
+                assign reg_mem[rf] = `ZeroWord;
+            end
+            else
+            begin: rfno0
+                // rd_waddr == register and wen
+                assign rf_wen[rf] = wen & (rd_waddr == rf) ;
+                DFF #(`Wordnum) register(
+                        .clk      (clk         ),
+                        .rstn     (rstn        ),
+                        .CE       (rf_wen[rf]  ),
+                        .set_data (`ZeroWord   ),
+                        .d        (rd_wdata    ),
+                        .q        (reg_mem[rf] )
+                    );
+            end
+        end
+    endgenerate
 
-    // read register 2
-    always @(*)
-    begin
-        if (!rstn)
-            rs2_data = `ZeroWord;
-        else if (rs2_raddr == `ZeroReg)
-            rs2_data = `ZeroWord;
-        else
-            rs2_data = reg_mem[rs2_raddr];
-    end
-
-    // integer i;
-
-    // write register 1
-    always @(posedge clk)
-    begin
-        if (!rstn)
-            // for (i = 0; i < 32; i = i + 1)
-            // reg_mem[i] <= `ZeroWord;
-            reg_mem[0] <= `ZeroWord;
-        else if(wen && (rd_waddr != `ZeroReg))
-            reg_mem[rd_waddr] <= rd_wdata;
-    end
+    assign rs1_data = reg_mem[rs1_raddr];
+    assign rs2_data = reg_mem[rs2_raddr];
 
 endmodule
