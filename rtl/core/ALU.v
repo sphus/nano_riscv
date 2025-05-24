@@ -27,7 +27,7 @@ module ALU (
     wire less_signed    = (op1_s < op2_s)   ;
     wire less_unsigned  = (op1 < op2)       ;
 
-    // 控制信号:二进制码转独热码
+    // control signal: binary code to one-hot code
     wire [7:0] ctrl = 8'h01 << alu_ctrl;
 
     assign result =

@@ -12,8 +12,6 @@ module wb (
 
     );
 
-    assign rd_data = 
-    {`Wordnum{ wb_mem}} & mem_rdata |
-    {`Wordnum{~wb_mem}} & result    ;
+    assign rd_data = wb_mem ? mem_rdata : result;
      
 endmodule

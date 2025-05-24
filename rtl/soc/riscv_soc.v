@@ -3,12 +3,12 @@ module riscv_soc (
         input  wire clk     	,
         input  wire rstn    	,
 
-		input  wire jtag_pin_TCK,
-		input  wire jtag_pin_TMS,
-		input  wire jtag_pin_TDI,
-		output wire jtag_pin_TDO,
-		output wire over        ,
-		output wire pass
+        input  wire jtag_pin_TCK,
+        input  wire jtag_pin_TMS,
+        input  wire jtag_pin_TDI,
+        output wire jtag_pin_TDO,
+        output wire over        ,
+        output wire pass
     );
 
     parameter DW = 32;
@@ -48,7 +48,7 @@ module riscv_soc (
     riscv riscv_inst(
               .clk           (clk           ),
               .rstn          (rstn          ),
-            //   .busy          (busy          ),
+              //   .busy          (busy          ),
               .mem_rdata     (mem_rdata     ),
               .mem_wdata     (mem_wdata     ),
               .mem_addr      (mem_addr      ),
@@ -57,9 +57,9 @@ module riscv_soc (
               .rmem          (rmem          ),
               .wmem          (wmem          ),
 
-			  // jtag_signal
-			  .halt_req_i	(jtag_halt_req	),
-			  .reset_req_i	(jtag_reset_req	)
+              // jtag_signal
+              .halt_req_i	(jtag_halt_req	),
+              .reset_req_i	(jtag_reset_req	)
           );
 
     ram_interface ram_interface_inst(
@@ -96,22 +96,22 @@ module riscv_soc (
              .r_data (r_data )
          );
 
-	jtag_top jtag_top_inst(
-		.clk			(clk			),
-		.jtag_rst_n		(rstn			),
+    jtag_top jtag_top_inst(
+                 .clk			(clk			),
+                 .jtag_rst_n		(rstn			),
 
-		.jtag_pin_TCK	(jtag_pin_TCK	),
-		.jtag_pin_TMS	(jtag_pin_TMS	),
-		.jtag_pin_TDI	(jtag_pin_TDI	),
-		.jtag_pin_TDO	(jtag_pin_TDO	),
+                 .jtag_pin_TCK	(jtag_pin_TCK	),
+                 .jtag_pin_TMS	(jtag_pin_TMS	),
+                 .jtag_pin_TDI	(jtag_pin_TDI	),
+                 .jtag_pin_TDO	(jtag_pin_TDO	),
 
-		.mem_we_o		(jtag_wen		),
-		.mem_addr_o		(jtag_waddr		),
-		.mem_wdata_o	(jtag_wdata		),
+                 .mem_we_o		(jtag_wen		),
+                 .mem_addr_o		(jtag_waddr		),
+                 .mem_wdata_o	(jtag_wdata		),
 
-		.halt_req_o		(jtag_halt_req	),
-		.reset_req_o	(jtag_reset_req	)
-	);
+                 .halt_req_o		(jtag_halt_req	),
+                 .reset_req_o	(jtag_reset_req	)
+             );
 
 
 

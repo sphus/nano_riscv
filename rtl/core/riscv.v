@@ -45,7 +45,7 @@ module riscv(
     wire                    JC          ;   // JC signal
     wire [`sw_imm_bus]      imm_ctrl    ;   // Immediate Control
 
-    // 分线
+    // decode
     assign  rs1_addr  = inst[19:15];
     assign  rs2_addr  = inst[24:20];
     assign  rd_addr   = inst[11: 7];

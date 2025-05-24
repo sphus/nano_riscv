@@ -91,25 +91,25 @@ module control (
     assign rmem = state[`IF] | (inst_L & state[`EX]);
     assign wb_mem = inst_L & state[`MEM];
 
-    // EX_WB阶段计算result
+    // EX/WB state calculate result
     wire [`ALU_sel_bus]  alu_sel_MEM_WB =
          {jal   |jalr       ,
           auipc             ,
           lui               ,
           inst_I|inst_L|inst_S,
-          inst_R|jcc    }
-         & {`ALU_sel_num{state[`EX]|state[`MEM]}};
+          inst_R|jcc    }   ;
 
-    // 在IF阶段计算inst_addr
+    // IF state calculate inst_addr
     wire [`ALU_sel_bus]  alu_sel_IF =
          {~{cjump_reg|jal_reg|jalr_reg},
-          cjump_reg|jal_reg,
-          `Disable    ,
+          cjump_reg|jal_reg ,
+          `Disable  ,
           jalr_reg  ,
-          `Disable}
-         & {`ALU_sel_num{state[`IF]}};
+          `Disable} ;
 
-    // sel信号合并
-    assign alu_sel = alu_sel_MEM_WB | alu_sel_IF;
+    // alu_sel signal merge
+    assign alu_sel =
+           alu_sel_MEM_WB   & {`ALU_sel_num{state[`EX]|state[`MEM]}}|
+           alu_sel_IF       & {`ALU_sel_num{state[`IF]}};
 
 endmodule //control

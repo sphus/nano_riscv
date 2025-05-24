@@ -34,7 +34,7 @@
   - 可以自己修改add wave的内容,改变想看的波形
   - 仿真完关闭Questa/modelsim后,可以双击执行[killExtra.bat](../killExtra.bat)快速删除仿真中间文件与波形,减小存储消耗
 
-## python自动化测试使用方法:
+## python自动化测试使用方法
 
 请先取消注释PYTHON
 
@@ -42,7 +42,8 @@
   - 教程:B站搜索 BV1pZ4y1h7og
   - 另外感谢tiny RISCV的开源
 - 打开命令行
-  ```
+
+  ``` bat
   :: 进入sim\pytest\文件夹
   :: 其中$PATH为工程的绝对路径
   cd $PATH\sim\pytest
@@ -54,12 +55,13 @@
   :: 全测试:执行generated/所有bin文件
   python test_all.py
   ```
+
 - 结果
   - print到cmd上了
     - 出现下图即测试成功
   - 也可以打开[fail.txt](sim/output/fail.txt)和[pass.txt](sim/output/pass.txt)查看具体指令测试结果
 
-```
+``` bat
 ############################
 #####  ALL INST PASS  ######
 ############################
@@ -67,17 +69,17 @@
 
 ## 寄存器表
 
-| Register | Name   | Use                          | Saver  |
-| :------- | :----- | :--------------------------- | :----- |
-| x0       | zero   | Constant 0                   | -      |
-| x1       | ra     | Return Address               | Caller |
-| x2       | sp     | Stack Pointer                | Callee |
-| x3       | gp     | Global Pointer               | -      |
-| x4       | tp     | Thread Pointer               | -      |
-| x5~x7    | t0~t2  | Temp                         | Caller |
-| x8       | s0/fp  | Saved/Frame pointer          | Callee |
-| x9       | s1     | Saved                        | Callee |
-| x10~x11  | a0~a1  | Arguments/ <br> Return Value | Caller |
-| x12~x17  | a2~a7  | Arguments                    | Caller |
-| x18~x27  | s2~s11 | Saved                        | Callee |
-| x28~x31  | t3~t6  | Temp                         | Caller |
+| Register | Name   | Use                    | Saver  |
+| :------- | :----- | :--------------------- | :----- |
+| x0       | zero   | Constant 0             | -      |
+| x1       | ra     | Return Address         | Caller |
+| x2       | sp     | Stack Pointer          | Callee |
+| x3       | gp     | Global Pointer         | -      |
+| x4       | tp     | Thread Pointer         | -      |
+| x5~x7    | t0~t2  | Temp                   | Caller |
+| x8       | s0/fp  | Saved/Frame pointer    | Callee |
+| x9       | s1     | Saved                  | Callee |
+| x10~x11  | a0~a1  | Arguments/Return Value | Caller |
+| x12~x17  | a2~a7  | Arguments              | Caller |
+| x18~x27  | s2~s11 | Saved                  | Callee |
+| x28~x31  | t3~t6  | Temp                   | Caller |

@@ -12,30 +12,29 @@ module register (
     );
 
     wire [`InstBus] reg_mem [`Regnum-1:0];
-    wire [`Regnum-1:0] rf_wen;
+    wire [`Regnum-1:0] rf_index_wen;
 
     // register file address index
-    genvar rf;
+    genvar rf_index;
     generate
-        for (rf=0; rf < `Regnum; rf=rf+1)
+        for (rf_index=0; rf_index < `Regnum; rf_index=rf_index+1)
         begin:regfile//{
-            if(rf==0)
-            begin: rf0
+            if(rf_index==0)
+            begin: rf_index_0
                 // x0 cannot be wrote since it is constant-zeros
-                assign rf_wen[rf] = `Disable;
-                assign reg_mem[rf] = `ZeroWord;
+                assign rf_index_wen[rf_index] = `Disable;
+                assign reg_mem[rf_index] = `ZeroWord;
             end
             else
-            begin: rfno0
-                // rd_waddr == register and wen
-                assign rf_wen[rf] = wen & (rd_waddr == rf) ;
+            begin: rf_index_no0
+                assign rf_index_wen[rf_index] = wen & (rd_waddr == rf_index) ;
                 DFF #(`Wordnum) register(
-                        .clk      (clk         ),
-                        .rstn     (rstn        ),
-                        .CE       (rf_wen[rf]  ),
-                        .set_data (`ZeroWord   ),
-                        .d        (rd_wdata    ),
-                        .q        (reg_mem[rf] )
+                        .clk      (clk                      ),
+                        .rstn     (rstn                     ),
+                        .CE       (rf_index_wen[rf_index]   ),
+                        .set_data (`ZeroWord                ),
+                        .d        (rd_wdata                 ),
+                        .q        (reg_mem[rf_index]        )
                     );
             end
         end
