@@ -8,10 +8,9 @@ module dual_ram #(
     input   wire            clk   ,
     input   wire 			rstn  ,
     input   wire 			wen   ,
-    input   wire [AW-1:0]	w_addr,
+    input   wire [AW-1:0]	addr  ,
     input   wire [DW-1:0]   w_data,
     input   wire 			ren   ,
-    input   wire [AW-1:0]	r_addr,
     output  wire [DW-1:0]   r_data
 );
 
@@ -20,8 +19,7 @@ wire [DW-1:0]   r_data_wire	;
 reg  [DW-1:0]   w_data_reg  ;
 reg 		    rd_eq_wr_reg;
 
-wire rd_eq_wr = wen && ren && (w_addr == r_addr);
-
+wire rd_eq_wr = wen & ren;
 
 assign r_data = (rd_eq_wr_reg) ? w_data_reg : r_data_wire;
 
@@ -49,10 +47,9 @@ dual_ram_template #(
                       .clk		(clk		),
                       .rstn		(rstn		),
                       .wen		(wen		),
-                      .w_addr	(w_addr	    ),
+                      .addr     (addr       ),
                       .w_data	(w_data	    ),
                       .ren		(ren        ),
-                      .r_addr	(r_addr	    ),
                       .r_data	(r_data_wire)
                   );
 
@@ -68,23 +65,22 @@ module dual_ram_template #(
     input wire 			clk   ,
     input wire 			rstn  ,
     input wire 			wen   ,
-    input wire[AW-1:0]	w_addr,
+    input wire[AW-1:0]	addr  ,
     input wire[DW-1:0]  w_data,
     input wire 			ren   ,
-    input wire[AW-1:0]	r_addr,
     output reg[DW-1:0]  r_data
 );
 reg[DW-1:0] memory[0:MEM_NUM-1];
 
 always @(posedge clk) begin
     if(ren)
-        r_data <= memory[r_addr];
+        r_data <= memory[addr];
 end
 
 always @(posedge clk) begin
     // if(rstn && wen)
     if(wen)
-        memory[w_addr] <= w_data;
+        memory[addr] <= w_data;
 end
 
 endmodule

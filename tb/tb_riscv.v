@@ -31,14 +31,14 @@ module tb_riscv();
     begin
         clk  = 1'b1;
         rstn = 1'b0;
-        #(`CLK_PERIOD * 1.5);
+        #(`CLK_PERIOD * 0.5);
         rstn = 1'b1;
     end
 
     parameter DEPTH = 2**13;  // 总地址 0x2000
     parameter RAM_DEPTH = DEPTH / 4;  // 每块 RAM 的大小为原来的1/4
 
-    reg [31:0] temp_mem [0:RAM_DEPTH-1]; // 读取 32-bit 数据
+    reg [`InstBus] temp_mem [0:RAM_DEPTH-1]; // 读取 32-bit 数据
 
     integer i;
 
@@ -55,17 +55,17 @@ module tb_riscv();
         end
     end
 
-    wire [31:0] inst_addr = tb_riscv.riscv_soc_inst.riscv_inst.inst_addr;
+    wire [`InstBus] inst_addr = tb_riscv.riscv_soc_inst.riscv_inst.inst_addr;
     wire        jump_flag = tb_riscv.riscv_soc_inst.riscv_inst.control_inst.jump_reg;
-    wire [31:0] alu_result = tb_riscv.riscv_soc_inst.riscv_inst.result;
-    wire [31:0] jump_addr = alu_result;
+    wire [`InstBus] alu_result = tb_riscv.riscv_soc_inst.riscv_inst.result;
+    wire [`InstBus] jump_addr = alu_result;
 
-    wire [31:0] x [31:0];
+    wire [`InstBus] x [`Regnum - 1:0];
 
     genvar y;
 
     generate
-        for(y = 0 ; y < 31; y = y + 1)
+        for(y = 0 ; y < `Regnum; y = y + 1)
         begin
             assign x[y] = tb_riscv.riscv_soc_inst.riscv_inst.register_inst.reg_mem[y];
         end
@@ -86,7 +86,7 @@ module tb_riscv();
         end
         else
         begin
-            for(r = 0;r < 31; r = r + 4)
+            for(r = 0;r < `Regnum; r = r + 4)
                 $display("x%2d to x%2d:%x %x %x %x",r,r+3,x[r],x[r+1],x[r+2],x[r+3]);
             $display("############################");
             $display("########  fail  !!!#########");
@@ -105,71 +105,75 @@ module tb_riscv();
 
 `ifdef ONE_INST_TEST
     always @(inst_addr)
+        `elsif JUMP_INST_TEST
+               always @(jump_flag)
 `else
     always @(x[3])
 `endif
 
-    begin
+               begin
 `ifdef PRINT_REGISTER
-        $display("inst_addr is %x at %d",inst_addr,$time);
-        for(r = 0;r < 31; r = r + 4)
-            $display("x%2d to x%2d:%x %x %x %x",r,r+3,x[r],x[r+1],x[r+2],x[r+3]);
-        $display("\n");
+                   $display("inst_addr is %x at %d",inst_addr,$time);
+                   for(r = 0;r < `Regnum; r = r + 4)
+                       $display("x%2d to x%2d:%x %x %x %x",r,r+3,x[r],x[r+1],x[r+2],x[r+3]);
+                   $display("\n");
 `endif
 
-    end
+               end
 
-    always @(posedge clk)
-    begin
-        if(jump_flag)
-            $display("%x jump to %x at %d", inst_addr,jump_addr,$time);
+           always @(posedge clk)
+           begin
+`ifdef JUMP_SHOW
+               if(jump_flag)
+                   $display("%x jump to %x at %d", inst_addr,jump_addr,$time);
+`endif
 
-        if ($time >= `SIM_TIME)
-        begin
-            for(r = 0;r < 31; r = r + 4)
-                $display("x%2d to x%2d:%x %x %x %x",r,r+3,x[r],x[r+1],x[r+2],x[r+3]);
-            $display("############################");
-            $display("######  timeout  !!!########");
-            $display("############################");
+               if ($time >= `SIM_TIME)
+               begin
+                   for(r = 0;r < `Regnum; r = r + 4)
+                       $display("x%2d to x%2d:%x %x %x %x",r,r+3,x[r],x[r+1],x[r+2],x[r+3]);
+                   $display("############################");
+                   $display("######  timeout  !!!########");
+                   $display("############################");
 `ifdef PYTHON
 
-            $finish;
+                   $finish;
 `else
-            $stop;
+                   $stop;
 `endif
 
-        end
-    end
+               end
+           end
 
-    always @(negedge clk)
-    begin
-        if ((alu_result ^ alu_result) !== 32'b0)
-        begin
-            $display("fail testnum = %2d", x[3]);
-            $display("############################");
-            $display("########  fail  !!!#########");
-            $display("############################");
-            $display("############################");
-            $display("###### Unknown result #####");
-            $display("############################");
+           always @(negedge clk)
+           begin
+               if ((alu_result ^ alu_result) !== `ZeroWord)
+               begin
+                   $display("fail testnum = %2d", x[3]);
+                   $display("############################");
+                   $display("########  fail  !!!#########");
+                   $display("############################");
+                   $display("############################");
+                   $display("###### Unknown result #####");
+                   $display("############################");
 `ifdef PYTHON
 
-            $finish;
+                   $finish;
 `else
-            $stop;
+                   $stop;
 `endif
 
-        end
-    end
+               end
+           end
 
 
-    riscv_soc riscv_soc_inst(
-                  .clk          (clk    ),
-                  .rstn         (rstn   ),
-                  .jtag_pin_TCK (1'b0   ),
-                  .jtag_pin_TMS (1'b0   ),
-                  .jtag_pin_TDI (1'b0   ),
-                  .jtag_pin_TDO (       )
-              );
+           riscv_soc riscv_soc_inst(
+                         .clk          (clk    ),
+                         .rstn         (rstn   ),
+                         .jtag_pin_TCK (1'b0   ),
+                         .jtag_pin_TMS (1'b0   ),
+                         .jtag_pin_TDI (1'b0   ),
+                         .jtag_pin_TDO (       )
+                     );
 
 endmodule

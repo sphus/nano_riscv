@@ -1,9 +1,12 @@
-
 `define PYTHON
 `define SIM_TIME 60000
 // `define ONE_INST_TEST
-// `define PRINT_REGISTER
-`define TEST_FILE "./generated/rv32ui-p-lb.txt"
+// `define JUMP_INST_TEST
+`define PRINT_REGISTER
+`define JUMP_SHOW
+// `define TEST_FILE "./generated/rv32ui-p-lw.txt"
+`define TEST_FILE "./generated/rv32ui-p-sb.txt"
+// `define TEST_FILE "./generated/rv32ui-p-addi.txt"
 
 `define RstnEnable  1'b0
 `define RstnDisable 1'b1
@@ -13,14 +16,14 @@
 `define Wordnum     32
 
 
-`define Statenum      3
+`define Statenum    2
 `define StateBus      (`Statenum - 1):0
-`define IF_STATE  3'b001
-`define EX_STATE  3'b010
-`define WB_STATE  3'b100
+`define IF_STATE  2'b01
+`define EX_STATE  2'b10
+// `define WB_STATE  3'b100
 `define IF  0
 `define EX  1
-`define MEM  2
+// `define MEM  2
 
 `define pc_rstn     32'h0
 `define ZeroReg     5'h0

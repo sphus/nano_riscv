@@ -1,23 +1,25 @@
 `include "../defines.v"
 
 module riscv(
-        input  wire                 clk             ,
-        input  wire                 rstn            ,
-        input  wire [`InstBus]      mem_rdata       ,
-        output wire [`InstBus]      mem_wdata       ,
-        output wire [`InstBus]      mem_addr        ,
-        output wire [`mem_type_bus] mem_type        ,
-        output wire                 mem_sign        ,
-        output wire                 rmem            ,
-        output wire                 wmem			,
+        input  wire                     clk         ,
+        input  wire                     rstn        ,
+        input  wire                     dbusy       ,
+        input  wire [`InstBus       ]   mem_rdata   ,
+        output wire [`InstBus       ]   mem_wdata   ,
+        output wire [`InstBus       ]   mem_addr    ,
+        output wire [`mem_type_bus  ]   mem_type    ,
+        output wire                     mem_sign    ,
+        output wire                     rimem       ,
+        output wire                     rdmem       ,
+        output wire                     wmem		,
 
         // jtag
-        input  wire					halt_req_i		,
-        input  wire					reset_req_i
+        input  wire					    halt_req_i	,
+        input  wire					    reset_req_i
     );
 
     // test signal
-    wire [`Hold_Bus] hold = `Disable;
+    wire [`Hold_Bus] hold = dbusy;
     wire [`Hold_Bus] halt_req = {`Hold_num{halt_req_i}};
     wire reset_req = reset_req_i;
 
@@ -43,7 +45,9 @@ module riscv(
     wire [`InstBus      ]   imm         ;   // immediate
     wire [`StateBus     ]   state       ;   // state
     wire                    JC          ;   // JC signal
-    wire [`sw_imm_bus]      imm_ctrl    ;   // Immediate Control
+    wire [`sw_imm_bus   ]   imm_ctrl    ;   // Immediate Control
+    wire                    inst_CE     ;   // 
+    wire                    inst_sel    ;   // 
 
     // decode
     assign  rs1_addr  = inst[19:15];
@@ -51,19 +55,19 @@ module riscv(
     assign  rd_addr   = inst[11: 7];
 
     DFF #(`Wordnum) pc_inst(
-             .clk      (clk       ),
-             .rstn     (rstn      ),
-             .CE       (state[`IF]),
-             .set_data (`pc_rstn  ),
-             .d        (mem_addr  ),
-             .q        (inst_addr )
-         );
+            .clk      (clk       ),
+            .rstn     (rstn      ),
+            .CE       (state[`IF]),
+            .set_data (`pc_rstn  ),
+            .d        (mem_addr  ),
+            .q        (inst_addr )
+        );
 
     IF IF_inst(
            .clk         (clk        ),
            .rstn        (rstn       ),
-           .inst_L      (inst_L     ),
-           .state       (state      ),
+           .inst_CE     (inst_CE    ),
+           .inst_sel    (inst_sel   ),
            .mem_rdata   (mem_rdata  ),
            .inst        (inst       )
        );
@@ -79,8 +83,11 @@ module riscv(
                 .alu_sel    (alu_sel    ),
                 .alu_ctrl   (alu_ctrl   ),
                 .inst_L     (inst_L     ),
+                .inst_CE    (inst_CE    ),
+                .inst_sel   (inst_sel   ),
                 .wb_mem     (wb_mem     ),
-                .rmem       (rmem       ),
+                .rimem      (rimem      ),
+                .rdmem      (rdmem      ),
                 .wmem       (wmem       ),
                 .wen        (wen        ),
                 .mem_type   (mem_type   ),
@@ -111,6 +118,7 @@ module riscv(
     ex ex_inst(
            .clk         (clk        ),
            .rstn        (rstn       ),
+           .hold        (hold       ),
            .inst_addr   (inst_addr  ),
            .rs1_data    (rs1_data   ),
            .rs2_data    (rs2_data   ),

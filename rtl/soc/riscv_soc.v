@@ -14,30 +14,31 @@ module riscv_soc (
     parameter DW = 32;
     parameter AW = 32;
 
-    wire [31:0] inst_addr_rom   ;
-    wire [31:0] inst_rom        ;
+    wire [`InstBus      ]   inst_addr_rom   ;
+    wire [`InstBus      ]   inst_rom        ;
 
-    wire [`InstBus]          mem_rdata       ;
-    wire [`InstBus]          mem_wdata       ;
-    wire [`InstBus]          mem_addr        ;
-    wire [`mem_type_bus]    mem_type        ;
+    wire [`InstBus      ]   mem_rdata       ;
+    wire [`InstBus      ]   mem_wdata       ;
+    wire [`InstBus      ]   mem_addr        ;
+    wire [`mem_type_bus ]   mem_type        ;
     wire                    mem_sign        ;
-    wire                    rmem            ;
+    wire                    rimem           ;
+    wire                    rdmem           ;
     wire                    wmem            ;
-    wire [`InstBus]          addr            ;
+    wire [`InstBus      ]   addr            ;
 
-    wire [3:0]		        wen             ;
-    wire [AW-1:0]	        w_addr          ;
-    wire [DW-1:0]           w_data          ;
+    wire [3:0           ]	wen             ;
+    wire [AW-1:0        ]	w_addr          ;
+    wire [DW-1:0        ]   w_data          ;
     wire 			        ren             ;
-    wire 			        busy            ;
-    wire [AW-1:0]	        r_addr          ;
-    wire [DW-1:0]           r_data          ;
+    wire 			        dbusy           ;
+    wire [AW-1:0        ]	r_addr          ;
+    wire [DW-1:0        ]   r_data          ;
 
     // jtag_signal
     wire 			        jtag_wen        ;
-    wire [AW-1:0]	        jtag_waddr      ;
-    wire [DW-1:0]           jtag_wdata      ;
+    wire [AW-1:0        ]	jtag_waddr      ;
+    wire [DW-1:0        ]   jtag_wdata      ;
     wire 			        jtag_halt_req   ;
     wire 			        jtag_reset_req  ;
 
@@ -46,16 +47,17 @@ module riscv_soc (
 
 
     riscv riscv_inst(
-              .clk           (clk           ),
-              .rstn          (rstn          ),
-              //   .busy          (busy          ),
-              .mem_rdata     (mem_rdata     ),
-              .mem_wdata     (mem_wdata     ),
-              .mem_addr      (mem_addr      ),
-              .mem_type      (mem_type      ),
-              .mem_sign      (mem_sign      ),
-              .rmem          (rmem          ),
-              .wmem          (wmem          ),
+              .clk      (clk        ),
+              .rstn     (rstn       ),
+              .dbusy    (dbusy      ),
+              .mem_rdata(mem_rdata  ),
+              .mem_wdata(mem_wdata  ),
+              .mem_addr (mem_addr   ),
+              .mem_type (mem_type   ),
+              .mem_sign (mem_sign   ),
+              .rimem    (rimem      ),
+              .rdmem    (rdmem      ),
+              .wmem     (wmem       ),
 
               // jtag_signal
               .halt_req_i	(jtag_halt_req	),
@@ -70,13 +72,14 @@ module riscv_soc (
                       .mem_addr (mem_addr   ),
                       .mem_type (mem_type   ),
                       .mem_sign (mem_sign   ),
-                      .rmem     (rmem       ),
+                      .rimem    (rimem      ),
+                      .rdmem    (rdmem      ),
                       .wmem     (wmem       ),
                       .r_data   (r_data     ),
                       .w_data   (w_data     ),
                       .addr     (addr       ),
                       .wen      (wen        ),
-                      .busy     (busy       ),
+                      .dbusy    (dbusy      ),
                       .ren      (ren        )
                   );
 
@@ -86,19 +89,18 @@ module riscv_soc (
              .AW      	(AW    ),
              .MEM_NUM 	(2**13  ))
          ram_inst(
-             .clk    (clk    ),
-             .rstn   (rstn   ),
-             .wen    (wen    ),
-             .w_addr (addr   ),
-             .w_data (w_data ),
-             .ren    (ren    ),
-             .r_addr (addr   ),
-             .r_data (r_data )
+             .clk   (clk    ),
+             .rstn  (rstn   ),
+             .wen   (wen    ),
+             .addr  (addr   ),
+             .w_data(w_data ),
+             .ren   (ren    ),
+             .r_data(r_data )
          );
 
     jtag_top jtag_top_inst(
                  .clk			(clk			),
-                 .jtag_rst_n		(rstn			),
+                 .jtag_rst_n    (rstn			),
 
                  .jtag_pin_TCK	(jtag_pin_TCK	),
                  .jtag_pin_TMS	(jtag_pin_TMS	),
@@ -106,13 +108,11 @@ module riscv_soc (
                  .jtag_pin_TDO	(jtag_pin_TDO	),
 
                  .mem_we_o		(jtag_wen		),
-                 .mem_addr_o		(jtag_waddr		),
+                 .mem_addr_o	(jtag_waddr		),
                  .mem_wdata_o	(jtag_wdata		),
 
-                 .halt_req_o		(jtag_halt_req	),
+                 .halt_req_o	(jtag_halt_req	),
                  .reset_req_o	(jtag_reset_req	)
              );
-
-
 
 endmodule

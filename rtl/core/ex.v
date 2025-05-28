@@ -3,6 +3,7 @@
 module ex (
         input  wire                     clk         ,
         input  wire                     rstn        ,
+        input  wire                     hold        ,
         // data
         input  wire [`InstBus]          inst_addr   ,
         input  wire [`InstBus]          rs1_data    ,
@@ -44,7 +45,7 @@ module ex (
     DFF #(1) rstn_dff(
             .clk      (clk      ),
             .rstn     (rstn     ),
-            .CE       (`Enable  ),
+            .CE       (~hold    ),
             .set_data (`Enable  ),
             .d        (`Disable ),
             .q        (rstn_reg )
